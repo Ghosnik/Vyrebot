@@ -1,0 +1,20 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v150\Platforms\Win32\PlatformToolsets\v141_xp\Toolset.targets(39,5): warning MSB8051: Support for targeting Windows XP is deprecated and will not be present in future releases of Visual Studio. Please see https://go.microsoft.com/fwlink/?linkid=2023588 for more information.
+  Dll.cpp
+  ExampleAIModule.cpp
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(300): error C2653: 'unitTypes': is not a class or namespace name
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(300): error C2065: 'Zerg_Spawning_Pool': undeclared identifier
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(300): error C2065: 'u': undeclared identifier
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(301): error C3927: '->': trailing return type is not allowed after a non-function declarator
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(301): error C3613: missing return type after '->' ('int' assumed)
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(301): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(301): error C2146: syntax error: missing ';' before identifier 'build'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(302): error C2059: syntax error: 'if'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(303): error C2143: syntax error: missing ';' before '{'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(303): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(306): error C2059: syntax error: 'if'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(307): error C2143: syntax error: missing ';' before '{'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(307): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(310): error C2059: syntax error: 'if'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(311): error C2143: syntax error: missing ';' before '{'
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(311): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\nikol\BWAPI\ExampleAIModule\Source\ExampleAIModule.cpp(317): error C2059: syntax error: 'if'
