@@ -4,8 +4,32 @@
 using namespace BWAPI;
 using namespace Filter;
 
+
+
+Unit currentRefinery = NULL;
+
+int ExampleAIModule::fakeMinerals() 
+{
+     preReq[0] = Broodwar->self()->minerals() - preSpent[0];
+     return preReq[0];
+}
+
+
+
+void ExampleAIModule::buildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee)
+{
+    TilePosition buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
+    unit->build(bigbee, buildPosition);
+    Broodwar->sendText("%s",bigbee.c_str());
+    preSpent[0] += bigbee.mineralPrice();
+    preSpent[1] += bigbee.gasPrice();
+}
+
 void ExampleAIModule::onStart()
 {
+
+    
+
   // Hello World!
   Broodwar->sendText("Hey lol");
 
@@ -78,9 +102,8 @@ void ExampleAIModule::onFrame()
   if ( Broodwar->getFrameCount() % Broodwar->getLatencyFrames() != 0 )
     return;
 
-
-
-
+  
+  preReq[1] = Broodwar->self()->gas() - preSpent[1];
   /*if (isBuilding2 == false)
   {
       time = Broodwar->getFrameCount();
@@ -92,7 +115,7 @@ void ExampleAIModule::onFrame()
   }*/
 
 
-  Unit currnetRefinery = NULL;
+  
  
   // Iterate through all the units that we own
   for (auto &u : Broodwar->self()->getUnits())
@@ -116,8 +139,9 @@ void ExampleAIModule::onFrame()
       continue;
 
     // Ignore the unit if it is incomplete or busy constructing
-    if (!u->isCompleted() || (u->getType() == UnitTypes::Zerg_Egg))
-      continue;
+    if (!u->isCompleted() || (u->getType() == UnitTypes::Zerg_Egg)) 
+        continue;
+      
      
 
     if (!u->isCompleted() || (u->getType() == UnitTypes::Zerg_Egg))
@@ -138,9 +162,9 @@ void ExampleAIModule::onFrame()
 
 
 
-    if (u->getType().isRefinery())
+    if (u->getType() == UnitTypes::Zerg_Extractor)
     {
-        currnetRefinery = u;
+        
        
         if (Refinerycount < 3 )//&& u->isBeingGathered() == false)might not need the isBeingGathered part of it, downside is that stuck drones don't fix as fast
        {
@@ -166,41 +190,35 @@ void ExampleAIModule::onFrame()
     if ( u->getType().isWorker() )
     {
 
-        if (u->isConstructing())
+        /*if (u->isConstructing())
         {
             Broodwar->sendText("Holy shit");
-            isBuilding2 = true;
-        }
+            //isBuilding2 = true;
+        }*/
 
-      if (!pool && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Spawning_Pool.mineralPrice()))
+        if (!extractor && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Extractor.mineralPrice()))
         {
-            TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Zerg_Spawning_Pool, u->getTilePosition());
-            u->build(UnitTypes::Zerg_Spawning_Pool, buildPosition);
-            pool = true;
-            isBuilding2 = true;
-            Broodwar->sendText("pool");
+            buildingBuildings(u, UnitTypes::Zerg_Extractor);
+            extractor = true;
+            Broodwar->sendText("Extractor");
+        }else if (pool == 0 && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Spawning_Pool.mineralPrice()))
+        {
+            buildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
+            pool = 1;
+            Broodwar->sendText("Spawning Pool");
+        }else if(pool == 2 && !den && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice()) && (Broodwar->self()->gas() >= UnitTypes::Zerg_Hydralisk_Den.gasPrice()))
+        {
+            buildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
+            den = true;
+            Broodwar->sendText("Hydra Den");
         }
+            
+     
 
 
 
-      if (!extractor && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Extractor.mineralPrice()))
-      {
-          TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Zerg_Extractor, u->getTilePosition());
-          u->build(UnitTypes::Zerg_Extractor, buildPosition);
-          extractor = true;
-          isBuilding2 = true;
-          Broodwar->sendText("Extractor");
-      }
       
 
-      if (pool == true && !den && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice()) && (Broodwar->self()->gas() >= UnitTypes::Zerg_Hydralisk_Den.gasPrice()))
-      {
-          TilePosition buildPosition = Broodwar->getBuildLocation(BWAPI::UnitTypes::Zerg_Hydralisk_Den, u->getTilePosition());
-          u->build(UnitTypes::Zerg_Hydralisk_Den, buildPosition);
-          den = true;
-          isBuilding2 = true;
-          Broodwar->sendText("Hydra Den");
-      }
       
 
       // if our worker is idle
@@ -221,10 +239,11 @@ void ExampleAIModule::onFrame()
 
           if (needsGasWorkers == true)
           {
-              u->gather(currnetRefinery);
+              u->gather(currentRefinery);
 
               
               Broodwar->sendText("Tried+1");
+              
               if (u->isGatheringGas())
               {
                   Refinerycount++;
@@ -249,16 +268,13 @@ void ExampleAIModule::onFrame()
 
        //if (pool == true && u->isIdle() && !u->train(UnitTypes::Zerg_Zergling))
 
-      if (isBuilding2 == false && u->isIdle())
+      if (fakeMinerals() >= 59 && u->isIdle() )//&& droneCount < 15)
       {
-         
-          if (droneCount < 15)
-          {
-              u->train(UnitTypes::Zerg_Drone);
-              
-          }
+          //Broodwar->sendText("%d", fakeMinerals());
+          
+          u->train(UnitTypes::Zerg_Drone);
 
-          if (Broodwar->self()->supplyTotal() == Broodwar->self()->supplyUsed() && !u->isConstructing())
+          if (Broodwar->self()->supplyTotal() == Broodwar->self()->supplyUsed() && !u->isTraining())
           {
           
               
@@ -339,7 +355,7 @@ void ExampleAIModule::onUnitHide(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitCreate(BWAPI::Unit unit)
 {
-  
+    
   if ( Broodwar->isReplay() )
   {
     // if we are in a replay, then we will print out the build order of the structures
@@ -359,6 +375,24 @@ void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
 {
+
+    if (unit->getPlayer() == Broodwar->self())
+    {
+
+
+
+        if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
+        {
+            preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
+            preSpent[1] = preSpent[1] - unit->getType().gasPrice();
+            //isBuilding2 = false;
+
+            Broodwar->sendText("%d morphComplete %s", preSpent[0], unit->getType().c_str());
+
+        }
+    }
+
+
   if ( Broodwar->isReplay() )
   {
     // if we are in a replay, then we will print out the build order of the structures
@@ -385,18 +419,26 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 {
 
 
-    if (unit->getPlayer() == Broodwar->self())
+
+
+
+    if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
     {
-
-        Broodwar->sendText("%s", unit->getType().c_str());
-
-        if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
-        {
-            isBuilding2 = false;
-
-            //requiresCreep() == true)
-        }
+        pool = 2;
+        Broodwar->sendText("Pools done");
     }
+
+    if (unit->getType() == UnitTypes::Zerg_Extractor)
+    {
+         currentRefinery = unit;
+    }
+
+    
+
+    
+
+
+    
 
     if (unit->getType() == UnitTypes::Zerg_Extractor)
     {
@@ -406,7 +448,7 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 
     if (unit->getType().requiresCreep() == true)
     {
-        Broodwar->sendText("Cool");
+        Broodwar->sendText("Creepy");
     }
 
 
