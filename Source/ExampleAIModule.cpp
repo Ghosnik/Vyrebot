@@ -8,15 +8,28 @@ using namespace Filter;
 
 Unit currentRefinery = NULL;
 
-int ExampleAIModule::fakeMinerals() 
+int ExampleAIModule::FakeResources(int reReq)
 {
-     preReq[0] = Broodwar->self()->minerals() - preSpent[0];
-     return preReq[0];
+    int Resource;
+
+    if (reReq == 0)
+    {
+        Resource = Broodwar->self()->minerals();
+    }else if (reReq == 1)
+    {
+        Resource = Broodwar->self()->gas();
+    }else if (reReq == 2)
+    {
+        Resource = Broodwar->self()->supplyTotal() /2;
+        
+    }
+    
+     return Resource - preSpent[reReq];
 }
 
 
 
-void ExampleAIModule::buildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee)
+void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee)
 {
     TilePosition buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
     unit->build(bigbee, buildPosition);
@@ -40,7 +53,7 @@ void ExampleAIModule::onStart()
   // Enable the UserInput flag, which allows us to control the bot and type messages.
   Broodwar->enableFlag(Flag::UserInput);
 
-  Broodwar->setLocalSpeed(20);
+  Broodwar->setLocalSpeed(15);
 
   // Uncomment the following line and the bot will know about everything through the fog of war (cheat).
   Broodwar->enableFlag(Flag::CompleteMapInformation);
@@ -74,6 +87,7 @@ void ExampleAIModule::onStart()
       Broodwar << "The matchup is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
   }
 
+
 }
 
 void ExampleAIModule::onEnd(bool isWinner)
@@ -90,8 +104,12 @@ void ExampleAIModule::onFrame()
   // Called once every game frame
 
   // Display the game frame rate as text in the upper left area of the screen
-  Broodwar->drawTextScreen(200, 0,  "FPS: %d", Broodwar->getFPS() );
-  Broodwar->drawTextScreen(200, 20, "Average FPS: %f", Broodwar->getAverageFPS() );
+  Broodwar->drawTextScreen(500, 20,  "FPS: %d", Broodwar->getFPS() );
+  Broodwar->drawTextScreen(500, 40, "Average FPS: %f", Broodwar->getAverageFPS() );
+  int seconds = Broodwar->getFrameCount() / 24;
+  int minutes = seconds / 60;
+  seconds = seconds % 60;
+  Broodwar->drawTextScreen(500, 60, "Ingame Time: %.2d:%.2d", minutes, seconds);
 
   // Return if the game is a replay or is paused
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
@@ -103,16 +121,8 @@ void ExampleAIModule::onFrame()
     return;
 
   
-  preReq[1] = Broodwar->self()->gas() - preSpent[1];
-  /*if (isBuilding2 == false)
-  {
-      time = Broodwar->getFrameCount();
-          
-  }
-  else if(time + 500 < Broodwar->getFrameCount()) {
-      isBuilding2 = false;
-      Broodwar->sendText("Done");
-  }*/
+  
+  
 
 
   
@@ -195,20 +205,20 @@ void ExampleAIModule::onFrame()
             Broodwar->sendText("Holy shit");
             //isBuilding2 = true;
         }*/
-
+        // build order
         if (!extractor && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Extractor.mineralPrice()))
         {
-            buildingBuildings(u, UnitTypes::Zerg_Extractor);
+            BuildingBuildings(u, UnitTypes::Zerg_Extractor);
             extractor = true;
             Broodwar->sendText("Extractor");
         }else if (pool == 0 && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Spawning_Pool.mineralPrice()))
         {
-            buildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
+            BuildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
             pool = 1;
             Broodwar->sendText("Spawning Pool");
         }else if(pool == 2 && !den && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice()) && (Broodwar->self()->gas() >= UnitTypes::Zerg_Hydralisk_Den.gasPrice()))
         {
-            buildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
+            BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
             den = true;
             Broodwar->sendText("Hydra Den");
         }
@@ -268,25 +278,28 @@ void ExampleAIModule::onFrame()
 
        //if (pool == true && u->isIdle() && !u->train(UnitTypes::Zerg_Zergling))
 
-      if (fakeMinerals() >= 59 && u->isIdle() )//&& droneCount < 15)
+      if (FakeResources(0) >= 59 && u->isIdle() )//&& droneCount < 15)
       {
-          //Broodwar->sendText("%d", fakeMinerals());
           
           u->train(UnitTypes::Zerg_Drone);
 
-          if (Broodwar->self()->supplyTotal() == Broodwar->self()->supplyUsed() && !u->isTraining())
+          if (FakeResources(2) <= 1.15 * (Broodwar->self()->supplyUsed()/2) && FakeResources(0) >= 100)
           {
-          
-              
+            u->train(UnitTypes::Zerg_Overlord);
+           
+            preSpent[2] = preSpent[2] - 8;
+           
+            
 
-
-              u->train(UnitTypes::Zerg_Overlord);
+            
           }
       } // closure: insufficient supply
     } // closure: failed to train idle unit
 
   }
-
+  Broodwar->drawTextScreen(0, 0, "%d Fakky", FakeResources(2));
+  Broodwar->drawTextScreen(0, 20, "%d  Supplytotel", Broodwar->self()->supplyTotal()/2);
+  Broodwar->drawTextScreen(0, 40, "%d  preSpent", preSpent[2]);
   } // closure: unit iterator
 
     //find a location for spawning pool and construct it
@@ -355,7 +368,8 @@ void ExampleAIModule::onUnitHide(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitCreate(BWAPI::Unit unit)
 {
-    
+   
+
   if ( Broodwar->isReplay() )
   {
     // if we are in a replay, then we will print out the build order of the structures
@@ -375,7 +389,7 @@ void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
 {
-
+   
     if (unit->getPlayer() == Broodwar->self())
     {
 
@@ -385,9 +399,9 @@ void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
         {
             preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
             preSpent[1] = preSpent[1] - unit->getType().gasPrice();
-            //isBuilding2 = false;
+            
 
-            Broodwar->sendText("%d morphComplete %s", preSpent[0], unit->getType().c_str());
+            Broodwar->sendText("Currnt Left:%d morphed:%s", preSpent[0], unit->getType().c_str());
 
         }
     }
@@ -418,8 +432,10 @@ void ExampleAIModule::onSaveGame(std::string gameName)
 void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 {
 
-
-
+    if (unit->getType() == UnitTypes::Zerg_Overlord)
+    {
+        preSpent[2] = preSpent[2] + 8;
+    }
 
 
     if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
@@ -431,18 +447,7 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
     if (unit->getType() == UnitTypes::Zerg_Extractor)
     {
          currentRefinery = unit;
-    }
-
-    
-
-    
-
-
-    
-
-    if (unit->getType() == UnitTypes::Zerg_Extractor)
-    {
-        Refinerycount = 0;
+         Refinerycount = 0;
     }
 
 

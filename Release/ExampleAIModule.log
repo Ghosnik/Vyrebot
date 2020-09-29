@@ -4,8 +4,8 @@ C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v150\Platforms\Win32\PlatformToolsets\v141_xp\Toolset.targets(39,5): warning MSB8051: Support for targeting Windows XP is deprecated and will not be present in future releases of Visual Studio. Please see https://go.microsoft.com/fwlink/?linkid=2023588 for more information.
      Creating library Release\ExampleAIModule.lib and object Release\ExampleAIModule.exp
   Generating code
-  703 of 2278 functions (30.9%) were compiled, the rest were copied from previous compilation.
+  40 of 2278 functions ( 1.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    100 functions had inline decision re-evaluated but remain unchanged
+    51 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   ExampleAIModule.vcxproj -> C:\BWAPI\ExampleAIModule\..\..\Users\nikol\Desktop\Starcraft_1161\bwapi-data\AI\ExampleAIModule.dll

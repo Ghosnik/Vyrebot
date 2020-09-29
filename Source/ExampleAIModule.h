@@ -24,9 +24,10 @@ public:
   virtual void onUnitRenegade(BWAPI::Unit unit);
   virtual void onSaveGame(std::string gameName);
   virtual void onUnitComplete(BWAPI::Unit unit);
-  virtual int fakeMinerals();
-  virtual void buildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee);
   // Everything below this line is safe to modify.
+  virtual int FakeResources(int reReq);
+  virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee);
+
   int pool = 0;
   bool extractor = false;
   bool den = false;
@@ -36,7 +37,7 @@ public:
   int time = 0;
   int Refinerycount = 0;
   int preReq[2];
-  int preSpent[2] = {0,0};
+  int preSpent[3] = {0,0,-8};
   
 	
   
