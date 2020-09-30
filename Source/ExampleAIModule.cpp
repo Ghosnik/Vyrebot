@@ -156,7 +156,7 @@ void ExampleAIModule::onFrame()
     // Make sure to include this block when handling any Unit pointer!
     if ( !u->exists() )
       continue;
-
+    
 
 
 
@@ -223,56 +223,51 @@ void ExampleAIModule::onFrame()
         Position pos = u->getPosition();
         
        
-        //con = false;
+      
         // build order
 
-        if (con == false) 
+        if (u->isConstructing() || u->isGatheringGas())
         {
-
-
-            if (!extractor && FakeResources(0) >= UnitTypes::Zerg_Extractor.mineralPrice())
-            {
-                BuildingBuildings(u, UnitTypes::Zerg_Extractor);
-                extractor = true;
-                Broodwar->sendText("Extractor %s", u->isConstructing() ? "True" : "False");
-            }
-            else if (pool == 0 && FakeResources(0) >= UnitTypes::Zerg_Spawning_Pool.mineralPrice())
-            {
-                BuildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
-                pool = 1;
-                Broodwar->sendText("Spawning Pool  %s", u->isConstructing() ? "True" : "False");
-
-            }
-            else if (pool == 2 && !den && FakeResources(0) >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Hydralisk_Den.gasPrice())
-            {
-                BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
-                den = true;
-                Broodwar->sendText("Hydra Den %s", u->isConstructing() ? "True" : "False");
-            }
-            else if (!hatch && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
-            {
-                BuildingBuildings(u, UnitTypes::Zerg_Hatchery);
-                hatch = true;
-                Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
-            }
+            Broodwar->drawTextMap(pos, "%c Holy shit", Text::Cyan);
+            continue;
+        }
+        if (!extractor && FakeResources(0) >= UnitTypes::Zerg_Extractor.mineralPrice() && pool == 1)//idk)
+        {
+            BuildingBuildings(u, UnitTypes::Zerg_Extractor);
+            extractor = true;
+            Broodwar->sendText("Extractor %s", u->isConstructing() ? "True" : "False");
+        }
+        else if (pool == 0 && FakeResources(0) >= UnitTypes::Zerg_Spawning_Pool.mineralPrice())
+        {
+            BuildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
+            pool = 1;
+            Broodwar->sendText("Spawning Pool  %s", u->isConstructing() ? "True" : "False");
 
         }
-        if (!u->isConstructing())
+        else if (pool == 2 && !den && FakeResources(0) >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Hydralisk_Den.gasPrice())
         {
-            con = true;
-
-            
-        } else if (u->isConstructing())
-        {
-            Broodwar->drawTextMap(pos,"%c Holy shit",Text::Cyan);
-            //Broodwar->sendText("Holy Shit");
+            BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
+            den = true;
+            Broodwar->sendText("Hydra Den %s", u->isConstructing() ? "True" : "False");
         }
+        else if (!hatch && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
+        {
+            BuildingBuildings(u, UnitTypes::Zerg_Hatchery);
+            hatch = true;
+            Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
+        }else if (queensNest == 0 && Lair == 2 && FakeResources(0) >= UnitTypes::Zerg_Queens_Nest.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Queens_Nest.gasPrice())
+        {
+            BuildingBuildings(u, UnitTypes::Zerg_Queens_Nest);
+            queensNest = 1;
+            Broodwar->sendText("Queen's Nest %s", u->isConstructing() ? "True" : "False");
+        }
+      
       
 
       
 
       // if our worker is idle
-      if ( u->isIdle() )//&& con == false )
+      if ( u->isIdle() && !u->isConstructing() && !u->isMorphing())
       {
             // Order workers carrying a resource to return them to the center,
             // otherwise find a mineral patch to harvest.
@@ -311,8 +306,7 @@ void ExampleAIModule::onFrame()
 
        } // closure: if idle
 
-    }
-    else if (u->getType() == (UnitTypes::Zerg_Larva))
+    }else if (u->getType() == (UnitTypes::Zerg_Larva))
     {
         if (FakeResources(2) <= 1.4 * (Broodwar->self()->supplyUsed() / 2) && u->isIdle() && FakeResources(0) >= 100)
         {
@@ -325,37 +319,67 @@ void ExampleAIModule::onFrame()
 
 
 
-        }
-        else if (FakeResources(0) >= 50 && FakeResources(2) > 1.4 * (Broodwar->self()->supplyUsed() / 2) && u->isIdle())//&& droneCount < 15)
+        }else if (FakeResources(2) > 1.4 * (Broodwar->self()->supplyUsed() / 2))
         {
-
-            u->train(UnitTypes::Zerg_Drone);
-
-
+            if ((FakeResources(0) >= 50) && u->isIdle() && droneCount < droneNeed)
+            {
+               
+                    u->train(UnitTypes::Zerg_Drone);
+                
+            }
+            if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == true && hydraCount < 6)
+            {
+                u->train(UnitTypes::Zerg_Hydralisk);
+            }
+            if (FakeResources(0) >= 50 && pool == 2 && Hive == 2)
+            {
+                u->train(UnitTypes::Zerg_Zergling);
+            }
+         
         }
+
+
+    } else if (u->getType() == UnitTypes::Zerg_Hatchery && u->isIdle()) // A resource depot is a Command Center, Nexus, or Hatchery
+    {
+         
+        if (FakeResources(0) >= UnitTypes::Zerg_Lair.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Lair.gasPrice() && Lair == 0 && pool == 2)
+        {
+            u->morph(UnitTypes::Zerg_Lair);
+            
+        }
+           
+         
     }
-    else if ( u->getType().isResourceDepot() ) // A resource depot is a Command Center, Nexus, or Hatchery
+    else if (u->getType() == UnitTypes::Zerg_Lair && u->isIdle())
     {
 
-        if (u->isIdle())
+        if (FakeResources(0) >= UnitTypes::Zerg_Hive.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Hive.gasPrice() && Hive == 0 && queensNest == 2)
         {
-            if (FakeResources(0) >= UnitTypes::Zerg_Lair.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Lair.gasPrice() && Lair == false)
-            {
-                u->morph(UnitTypes::Zerg_Lair);
-                Lair = true;
-            }
+            u->morph(UnitTypes::Zerg_Hive);
         }
 
+    } else if (u->getType() == UnitTypes::Zerg_Hydralisk_Den)
+    {
+        if (u->isIdle() && Lair == 2 && FakeResources(0) >= TechTypes::Lurker_Aspect.mineralPrice() && FakeResources(1) >= TechTypes::Lurker_Aspect.gasPrice())
+        {
+            u->research(TechTypes::Lurker_Aspect);
+        }
 
+    }else if (u->getType() == UnitTypes::Zerg_Spawning_Pool && u->isIdle() && FakeResources(0) >= UpgradeTypes::Metabolic_Boost.mineralPrice() && FakeResources(1) >= UpgradeTypes::Metabolic_Boost.gasPrice())
+    {
+       u->upgrade(UpgradeTypes::Metabolic_Boost);
 
+        if (Hive == 2 && FakeResources(0) >= UpgradeTypes::Adrenal_Glands.mineralPrice() && FakeResources(1) >= UpgradeTypes::Adrenal_Glands.gasPrice())
+        {
+            u->upgrade(UpgradeTypes::Adrenal_Glands);
+        }
+    }else if (u->getType() == UnitTypes::Zerg_Hydralisk)
+    {
+        u->morph(UnitTypes::Zerg_Lurker);
 
-      
-
-       //if (pool == true && u->isIdle() && !u->train(UnitTypes::Zerg_Zergling))
-      
-
-          
-      
+    }else if (u->getType() == UnitTypes::Zerg_Lurker)
+    {
+        u->burrow();//idk
     }
     
   }
@@ -445,6 +469,10 @@ void ExampleAIModule::onUnitCreate(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
 {
+    if (unit->getType() == UnitTypes::Zerg_Drone)
+    {
+        droneCount - 1;
+    }
 }
 
 void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
@@ -452,21 +480,34 @@ void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
    
     if (unit->getPlayer() == Broodwar->self())
     {
-
+        
         //Broodwar->sendText("morphed: %s", unit->getType().c_str());
+        if (unit->getType() == UnitTypes::Zerg_Lair || unit->getType() == UnitTypes::Zerg_Hive)
+        {
+            if (unit->getType() == UnitTypes::Zerg_Lair)
+            {
+                Lair = 1;
+            }
+            if (unit->getType() == UnitTypes::Zerg_Hive)
+            {
+                Hive = 1;
+                hatch = false;//idk
+            }
+            
+            
 
-        if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
+        }else if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
         {
             preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
             preSpent[1] = preSpent[1] - unit->getType().gasPrice();
-            con = false;
             
+            droneCount - 1;
             
 
          
 
         }
-       
+        
     }
 
 
@@ -499,29 +540,42 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
         if (unit->getType() == UnitTypes::Zerg_Overlord)
         {
             preSpent[2] = preSpent[2] + 8;
+        }else if (unit->getType() == UnitTypes::Zerg_Lair)
+        {
+            Lair = 2;
+            Broodwar->sendText("Lairs done");
         }
+        else if (unit->getType() == UnitTypes::Zerg_Hive)
+        {
+            Hive = 2;
+            Broodwar->sendText("Hives done");
 
-
-        if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
+        }else if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
         {
             pool = 2;
             Broodwar->sendText("Pools done");
-        }
 
-        if (unit->getType() == UnitTypes::Zerg_Extractor)
+        }
+        else if (unit->getType() == UnitTypes::Zerg_Queens_Nest)
+        {
+            queensNest = 2;
+            Broodwar->sendText("Queen's Nest done");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Extractor)
         {
             currentRefinery = unit;
             Refinerycount = 0;
-        }
+            droneNeed = 17;
 
+        }else if (unit->getType() == UnitTypes::Zerg_Hydralisk)
+        {
+            hydraCount++;
 
-        
-
-
-        if (unit->getType() == UnitTypes::Zerg_Drone)
+        }else if (unit->getType() == UnitTypes::Zerg_Drone)
         {
             droneCount++;
 
         }
     }
+    
 } 
