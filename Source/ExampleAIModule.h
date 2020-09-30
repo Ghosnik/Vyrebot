@@ -31,13 +31,17 @@ public:
   int pool = 0;
   bool extractor = false;
   bool den = false;
+  bool hatch = false;
+  bool Lair = false;
+
   bool needsGasWorkers = false;
   bool isBuilding2 = false;
+  bool con = false;
   int droneCount = 0;
   int time = 0;
   int Refinerycount = 0;
-  int preReq[2];
   int preSpent[3] = {0,0,-8};
+  
   
 	
   

@@ -31,11 +31,25 @@ int ExampleAIModule::FakeResources(int reReq)
 
 void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee)
 {
-    TilePosition buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
-    unit->build(bigbee, buildPosition);
-    Broodwar->sendText("%s",bigbee.c_str());
-    preSpent[0] += bigbee.mineralPrice();
-    preSpent[1] += bigbee.gasPrice();
+   
+    
+        TilePosition buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
+        unit->build(bigbee, buildPosition);
+        //Broodwar->sendText("%s", bigbee.c_str());
+        preSpent[0] += bigbee.mineralPrice();
+        preSpent[1] += bigbee.gasPrice();
+        Broodwar->sendText("Holy Fuck %s", unit->isConstructing() ? "True" : "False");
+        
+    
+    /*else if (unit->getType().isBuilding())
+    {
+        unit->train(bigbee);
+        Broodwar->sendText("%s", bigbee.c_str());
+        preSpent[0] += bigbee.mineralPrice();
+        preSpent[1] += bigbee.gasPrice();
+        Broodwar->sendText("overtime");
+    }*/
+    
 }
 
 void ExampleAIModule::onStart()
@@ -53,7 +67,7 @@ void ExampleAIModule::onStart()
   // Enable the UserInput flag, which allows us to control the bot and type messages.
   Broodwar->enableFlag(Flag::UserInput);
 
-  Broodwar->setLocalSpeed(15);
+  Broodwar->setLocalSpeed(10);
 
   // Uncomment the following line and the bot will know about everything through the fog of war (cheat).
   Broodwar->enableFlag(Flag::CompleteMapInformation);
@@ -104,12 +118,19 @@ void ExampleAIModule::onFrame()
   // Called once every game frame
 
   // Display the game frame rate as text in the upper left area of the screen
-  Broodwar->drawTextScreen(500, 20,  "FPS: %d", Broodwar->getFPS() );
-  Broodwar->drawTextScreen(500, 40, "Average FPS: %f", Broodwar->getAverageFPS() );
+  Broodwar->drawTextScreen(0, 20,  "FPS: %d", Broodwar->getFPS() );
+  Broodwar->drawTextScreen(0, 40, "Average FPS: %f", Broodwar->getAverageFPS() );
   int seconds = Broodwar->getFrameCount() / 24;
   int minutes = seconds / 60;
   seconds = seconds % 60;
-  Broodwar->drawTextScreen(500, 60, "Ingame Time: %.2d:%.2d", minutes, seconds);
+  Broodwar->drawTextScreen(0, 60, "Ingame Time: %.2d:%.2d", minutes, seconds);
+
+  Broodwar->drawTextScreen(500, 20, "Internal Minerals: %d ", FakeResources(0));
+  Broodwar->drawTextScreen(500, 30, "Internal Gas: %d ", FakeResources(1));
+  Broodwar->drawTextScreen(500, 40, "Internal Supply: %d ", FakeResources(2));
+  Broodwar->drawTextScreen(500, 50, "Drone Count: %d", droneCount);
+
+  //Broodwar->drawTextScreen(500, 70, ": %d",
 
   // Return if the game is a replay or is paused
   if ( Broodwar->isReplay() || Broodwar->isPaused() || !Broodwar->self() )
@@ -122,7 +143,7 @@ void ExampleAIModule::onFrame()
 
   
   
-  
+ 
 
 
   
@@ -176,7 +197,7 @@ void ExampleAIModule::onFrame()
     {
         
        
-        if (Refinerycount < 3 )//&& u->isBeingGathered() == false)might not need the isBeingGathered part of it, downside is that stuck drones don't fix as fast
+        if ((Refinerycount < 3 ))// && !u->isBeingGathered())//might not need the isBeingGathered part of it, downside is that stuck drones don't fix as fast
        {
            needsGasWorkers = true;
            
@@ -199,52 +220,72 @@ void ExampleAIModule::onFrame()
     // If the unit is a worker unit
     if ( u->getType().isWorker() )
     {
-
-        /*if (u->isConstructing())
-        {
-            Broodwar->sendText("Holy shit");
-            //isBuilding2 = true;
-        }*/
+        Position pos = u->getPosition();
+        
+       
+        //con = false;
         // build order
-        if (!extractor && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Extractor.mineralPrice()))
+
+        if (con == false) 
         {
-            BuildingBuildings(u, UnitTypes::Zerg_Extractor);
-            extractor = true;
-            Broodwar->sendText("Extractor");
-        }else if (pool == 0 && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Spawning_Pool.mineralPrice()))
-        {
-            BuildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
-            pool = 1;
-            Broodwar->sendText("Spawning Pool");
-        }else if(pool == 2 && !den && (Broodwar->self()->minerals() >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice()) && (Broodwar->self()->gas() >= UnitTypes::Zerg_Hydralisk_Den.gasPrice()))
-        {
-            BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
-            den = true;
-            Broodwar->sendText("Hydra Den");
+
+
+            if (!extractor && FakeResources(0) >= UnitTypes::Zerg_Extractor.mineralPrice())
+            {
+                BuildingBuildings(u, UnitTypes::Zerg_Extractor);
+                extractor = true;
+                Broodwar->sendText("Extractor %s", u->isConstructing() ? "True" : "False");
+            }
+            else if (pool == 0 && FakeResources(0) >= UnitTypes::Zerg_Spawning_Pool.mineralPrice())
+            {
+                BuildingBuildings(u, UnitTypes::Zerg_Spawning_Pool);
+                pool = 1;
+                Broodwar->sendText("Spawning Pool  %s", u->isConstructing() ? "True" : "False");
+
+            }
+            else if (pool == 2 && !den && FakeResources(0) >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Hydralisk_Den.gasPrice())
+            {
+                BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
+                den = true;
+                Broodwar->sendText("Hydra Den %s", u->isConstructing() ? "True" : "False");
+            }
+            else if (!hatch && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
+            {
+                BuildingBuildings(u, UnitTypes::Zerg_Hatchery);
+                hatch = true;
+                Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
+            }
+
         }
+        if (!u->isConstructing())
+        {
+            con = true;
+
             
-     
-
-
-
+        } else if (u->isConstructing())
+        {
+            Broodwar->drawTextMap(pos,"%c Holy shit",Text::Cyan);
+            //Broodwar->sendText("Holy Shit");
+        }
       
 
       
 
       // if our worker is idle
-      if ( u->isIdle() )
+      if ( u->isIdle() )//&& con == false )
       {
             // Order workers carrying a resource to return them to the center,
             // otherwise find a mineral patch to harvest.
 
 
-
+           
             if ( u->isCarryingGas() || u->isCarryingMinerals() )
             {
               u->returnCargo();
             }
             
-            
+
+           
            
 
           if (needsGasWorkers == true)
@@ -252,12 +293,12 @@ void ExampleAIModule::onFrame()
               u->gather(currentRefinery);
 
               
-              Broodwar->sendText("Tried+1");
+              
               
               if (u->isGatheringGas())
               {
                   Refinerycount++;
-                  Broodwar->sendText("Worked");
+                  
               }
 
           }else
@@ -271,35 +312,54 @@ void ExampleAIModule::onFrame()
        } // closure: if idle
 
     }
+    else if (u->getType() == (UnitTypes::Zerg_Larva))
+    {
+        if (FakeResources(2) <= 1.4 * (Broodwar->self()->supplyUsed() / 2) && u->isIdle() && FakeResources(0) >= 100)
+        {
+            u->train(UnitTypes::Zerg_Overlord);
+
+            preSpent[2] = preSpent[2] - 8;
+
+            
+
+
+
+
+        }
+        else if (FakeResources(0) >= 50 && FakeResources(2) > 1.4 * (Broodwar->self()->supplyUsed() / 2) && u->isIdle())//&& droneCount < 15)
+        {
+
+            u->train(UnitTypes::Zerg_Drone);
+
+
+        }
+    }
     else if ( u->getType().isResourceDepot() ) // A resource depot is a Command Center, Nexus, or Hatchery
     {
 
-      // Order the depot to construct more workers! But only when it is idle.
+        if (u->isIdle())
+        {
+            if (FakeResources(0) >= UnitTypes::Zerg_Lair.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Lair.gasPrice() && Lair == false)
+            {
+                u->morph(UnitTypes::Zerg_Lair);
+                Lair = true;
+            }
+        }
+
+
+
+
+      
 
        //if (pool == true && u->isIdle() && !u->train(UnitTypes::Zerg_Zergling))
+      
 
-      if (FakeResources(0) >= 59 && u->isIdle() )//&& droneCount < 15)
-      {
           
-          u->train(UnitTypes::Zerg_Drone);
-
-          if (FakeResources(2) <= 1.15 * (Broodwar->self()->supplyUsed()/2) && FakeResources(0) >= 100)
-          {
-            u->train(UnitTypes::Zerg_Overlord);
-           
-            preSpent[2] = preSpent[2] - 8;
-           
-            
-
-            
-          }
-      } // closure: insufficient supply
-    } // closure: failed to train idle unit
-
+      
+    }
+    
   }
-  Broodwar->drawTextScreen(0, 0, "%d Fakky", FakeResources(2));
-  Broodwar->drawTextScreen(0, 20, "%d  Supplytotel", Broodwar->self()->supplyTotal()/2);
-  Broodwar->drawTextScreen(0, 40, "%d  preSpent", preSpent[2]);
+ 
   } // closure: unit iterator
 
     //find a location for spawning pool and construct it
@@ -393,17 +453,20 @@ void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
     if (unit->getPlayer() == Broodwar->self())
     {
 
-
+        //Broodwar->sendText("morphed: %s", unit->getType().c_str());
 
         if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
         {
             preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
             preSpent[1] = preSpent[1] - unit->getType().gasPrice();
+            con = false;
+            
             
 
-            Broodwar->sendText("Currnt Left:%d morphed:%s", preSpent[0], unit->getType().c_str());
+         
 
         }
+       
     }
 
 
@@ -431,35 +494,34 @@ void ExampleAIModule::onSaveGame(std::string gameName)
 
 void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 {
-
-    if (unit->getType() == UnitTypes::Zerg_Overlord)
+    if (unit->getPlayer() == Broodwar->self())
     {
-        preSpent[2] = preSpent[2] + 8;
-    }
+        if (unit->getType() == UnitTypes::Zerg_Overlord)
+        {
+            preSpent[2] = preSpent[2] + 8;
+        }
 
 
-    if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
-    {
-        pool = 2;
-        Broodwar->sendText("Pools done");
-    }
+        if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
+        {
+            pool = 2;
+            Broodwar->sendText("Pools done");
+        }
 
-    if (unit->getType() == UnitTypes::Zerg_Extractor)
-    {
-         currentRefinery = unit;
-         Refinerycount = 0;
-    }
-
-
-    if (unit->getType().requiresCreep() == true)
-    {
-        Broodwar->sendText("Creepy");
-    }
+        if (unit->getType() == UnitTypes::Zerg_Extractor)
+        {
+            currentRefinery = unit;
+            Refinerycount = 0;
+        }
 
 
-    if (unit->getType() == UnitTypes::Zerg_Drone)
-    {
-        droneCount++;
-        Broodwar->sendText("%d", droneCount);
+        
+
+
+        if (unit->getType() == UnitTypes::Zerg_Drone)
+        {
+            droneCount++;
+
+        }
     }
 } 
