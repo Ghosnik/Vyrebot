@@ -130,6 +130,7 @@ void ExampleAIModule::onFrame()
   Broodwar->drawTextScreen(500, 40, "Internal Supply: %d ", FakeResources(2));
   Broodwar->drawTextScreen(500, 50, "Drone Count: %d", droneCount);
 
+  
   //Broodwar->drawTextScreen(500, 70, ": %d",
 
   // Return if the game is a replay or is paused
@@ -145,12 +146,14 @@ void ExampleAIModule::onFrame()
   
  
 
-
-  
- 
+    
   // Iterate through all the units that we own
   for (auto &u : Broodwar->self()->getUnits())
   {
+      if ((u->getType() == UnitTypes::Zerg_Lurker) && u->isBurrowed())
+      {
+          Broodwar->drawTextMap(u->getPosition(), "%c Invis", Text::Yellow);
+      }
       
     // Ignore the unit if it no longer exists
     // Make sure to include this block when handling any Unit pointer!
@@ -187,28 +190,30 @@ void ExampleAIModule::onFrame()
 
     if ((u->getType() == UnitTypes::Zerg_Zergling) && u->isIdle())
     {
-        u->attack(u->getClosestUnit(Filter::IsEnemy)->getPosition());
-
+        if (u->getClosestUnit(Filter::IsEnemy) != NULL)
+        {
+            u->attack(u->getClosestUnit(Filter::IsEnemy)->getPosition());
+        }
     }else if ((u->getType() == UnitTypes::Zerg_Hydralisk))
     {
         u->morph(UnitTypes::Zerg_Lurker);
 
     }else if ((u->getType() == UnitTypes::Zerg_Lurker))
     {
-        Position in = (u->getClosestUnit(Filter::IsEnemy)->getPosition());
+       // Position closeEnemy = (u->getClosestUnit(Filter::IsEnemy)->getPosition());
        
         
         if (u->getClosestUnit(Filter::IsEnemy) != NULL )
         {
-            if (u->getDistance(in) <= 180)
+            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy)->getPosition()) <= 180)
             {
-                Broodwar->drawTextMap(u->getPosition(), "%c Invis", Text::Yellow);
+                
                 u->burrow();//idk
             }
             else
             {
                 u->unburrow();
-                u->move(in);
+                u->move(u->getClosestUnit(Filter::IsEnemy)->getPosition());
             }
         }
 
