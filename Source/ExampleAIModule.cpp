@@ -194,11 +194,20 @@ void ExampleAIModule::onFrame()
         {
             u->attack(u->getClosestUnit(Filter::IsEnemy)->getPosition());
         }
-    }else if ((u->getType() == UnitTypes::Zerg_Hydralisk))
-    {
-        u->morph(UnitTypes::Zerg_Lurker);
+    }
 
-    }else if ((u->getType() == UnitTypes::Zerg_Lurker))
+    if ((u->getType() == UnitTypes::Zerg_Hydralisk))
+    {
+        if (FakeResources(0) >= 50 && FakeResources(1) >= 100)
+        {
+            u->morph(UnitTypes::Zerg_Lurker);
+        }
+
+        
+
+    }
+
+    if ((u->getType() == UnitTypes::Zerg_Lurker))
     {
        // Position closeEnemy = (u->getClosestUnit(Filter::IsEnemy)->getPosition());
        
@@ -355,12 +364,12 @@ void ExampleAIModule::onFrame()
 
         }else if (FakeResources(2) > 1.4 * (Broodwar->self()->supplyUsed() / 2))
         {
-            if ((FakeResources(0) >= 50) && u->isIdle() && droneCount < droneNeed)
+            if ((FakeResources(0) >= 50) && droneCount < droneNeed)
             {
                     u->train(UnitTypes::Zerg_Drone);
                     droneCount++;
                 
-            }else if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == true && (hydraCount < 6 || FakeResources(1) >= 250 && Hive == 2))
+            }else if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == true && (hydraCount < 6 || FakeResources(0) >= 75 && FakeResources(1) >= 300 && Hive == 2))
             {
                 
                u->train(UnitTypes::Zerg_Hydralisk);
@@ -445,7 +454,7 @@ void ExampleAIModule::onPlayerLeft(BWAPI::Player player)
 {
   // Interact verbally with the other players in the game by
   // announcing that the other player has left.
-  Broodwar->sendText("Goodbye %s!", player->getName().c_str());
+  Broodwar->sendText("Later Nerd");
 }
 
 void ExampleAIModule::onNukeDetect(BWAPI::Position target)
