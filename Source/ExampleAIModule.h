@@ -1,11 +1,22 @@
 #pragma once
 #include <BWAPI.h>
 
+using namespace BWAPI;
+
 // Remember not to use "Broodwar" in any global class constructor!
 
 class ExampleAIModule : public BWAPI::AIModule
 {
 public:
+class Refinery
+{
+public:
+	Unit Extractor;
+	Unit gasDrones[3] = {};
+};
+
+
+
   // Virtual functions for callbacks, leave these as they are.
   virtual void onStart(); 
   virtual void onEnd(bool isWinner);
@@ -27,6 +38,10 @@ public:
   // Everything below this line is safe to modify.
   virtual int FakeResources(int reReq);
   virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee);
+  Unit ExampleAIModule::PullDrones();
+
+
+
 
   int pool = 0;
   int Lair = 0;
@@ -35,19 +50,22 @@ public:
   bool extractor = false;
   bool den = false;
   bool hatch = false;
-  
+  bool attack = false;
 
-  bool needsGasWorkers = false;
-  bool isBuilding2 = false;
-  bool con = false;
+  
+ 
   int droneCount = 0;
-  int droneNeed = 13;//idk
+  int droneNeed = 18;//idk
   int hydraCount = 0;
-  int time = 0;
-  int Refinerycount = 0;
   int preSpent[3] = {0,0,-8};
+
+
+
   
   
-	
+  Unit droneArry[201] = {};
   
+  
+  int refineryCount = 0;
+  Refinery refineryArry[30];
 };

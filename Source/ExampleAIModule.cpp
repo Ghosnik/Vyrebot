@@ -1,12 +1,32 @@
 #include "ExampleAIModule.h"
+#include "BWEM 1.4.1\src\bwem.h"  
 #include <iostream>
+#include <fstream> 
 
 using namespace BWAPI;
 using namespace Filter;
+//using namespace BWEM;
+//using namespace BWEM::BWAPI_ext;
+//using namespace BWEM::utils;
+
+namespace { auto& theMap = BWEM::Map::Instance(); }
 
 
 
-Unit currentRefinery = NULL;
+Unit ExampleAIModule::PullDrones()
+{
+    for (int i = 0; i < droneCount; i++)
+    {
+        if (droneArry[i] != NULL && droneArry[i]->getType() == UnitTypes::Zerg_Drone && !droneArry[i]->isGatheringGas() && !droneArry[i]->isConstructing())
+        {
+           
+            //Broodwar->sendText("%s fffff", droneArry[i]->getType().c_str());
+            return droneArry[i];
+        }
+
+    }
+
+}
 
 int ExampleAIModule::FakeResources(int reReq)
 {
@@ -55,53 +75,71 @@ void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee
 void ExampleAIModule::onStart()
 {
 
-    
+    try {
 
-  // Hello World!
-  Broodwar->sendText("Hey lol");
+        // Hello World!
+        Broodwar->sendText("Hey lol");
 
-  // Print the map name.
-  // BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
-  Broodwar << "The map is " << Broodwar->mapName() << "!" << std::endl;
+        // Print the map name.
+        // BWAPI returns std::string when retrieving a string, don't forget to add .c_str() when printing!
+        Broodwar << "The map is " << Broodwar->mapName() << "!" << std::endl;
 
-  // Enable the UserInput flag, which allows us to control the bot and type messages.
-  Broodwar->enableFlag(Flag::UserInput);
+        // Enable the UserInput flag, which allows us to control the bot and type messages.
+        Broodwar->enableFlag(Flag::UserInput);
 
-  Broodwar->setLocalSpeed(10);
+        Broodwar->setLocalSpeed(10);
 
-  // Uncomment the following line and the bot will know about everything through the fog of war (cheat).
-  Broodwar->enableFlag(Flag::CompleteMapInformation);
+        // Uncomment the following line and the bot will know about everything through the fog of war (cheat).
+        Broodwar->enableFlag(Flag::CompleteMapInformation);
 
-  // Set the command optimization level so that common commands can be grouped
-  // and reduce the bot's APM (Actions Per Minute).
-  Broodwar->setCommandOptimizationLevel(2);
+        // Set the command optimization level so that common commands can be grouped
+        // and reduce the bot's APM (Actions Per Minute).
+        Broodwar->setCommandOptimizationLevel(2);
 
-  // Check if this is a replay
-  if ( Broodwar->isReplay() )
-  {
+        // Check if this is a replay
+        if (Broodwar->isReplay())
+        {
 
-    // Announce the players in the replay
-    Broodwar << "The following are fucking:" << std::endl;
-    
-    // Iterate all the players in the game using a std:: iterator
-    Playerset players = Broodwar->getPlayers();
-    for(auto p : players)
-    {
-      // Only print the player if they are not an observer
-      if ( !p->isObserver() )
-        Broodwar << p->getName() << ", playing as " << p->getRace() << std::endl;
+            // Announce the players in the replay
+            Broodwar << "The following are fucking:" << std::endl;
+
+            // Iterate all the players in the game using a std:: iterator
+            Playerset players = Broodwar->getPlayers();
+            for (auto p : players)
+            {
+                // Only print the player if they are not an observer
+                if (!p->isObserver())
+                    Broodwar << p->getName() << ", playing as " << p->getRace() << std::endl;
+            }
+
+        }
+        else // if this is not a replay
+        {
+            // Retrieve you and your enemy's races. enemy() will just return the first enemy.
+            // If you wish to deal with multiple enemies then you must use enemies().
+            if (Broodwar->enemy()) // First make sure there is an enemy
+                Broodwar << "The matchup is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
+
+            Broodwar << "Map initialization..." << std::endl;
+
+            theMap.Initialize();
+            theMap.EnableAutomaticPathAnalysis();
+            bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+            assert(startingLocationsOK);
+
+            BWEM::utils::MapPrinter::Initialize(&theMap);
+            BWEM::utils::printMap(theMap);      // will print the map into the file <StarCraftFolder>bwapi-data/map.bmp
+            BWEM::utils::pathExample(theMap);   // add to the printed map a path between two starting locations
+
+            Broodwar << "gg" << std::endl;
+
+        }
+        
     }
-
-  }
-  else // if this is not a replay
-  {
-    // Retrieve you and your enemy's races. enemy() will just return the first enemy.
-    // If you wish to deal with multiple enemies then you must use enemies().
-    if ( Broodwar->enemy() ) // First make sure there is an enemy
-      Broodwar << "The matchup is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
-  }
-
-
+    catch(const std::exception & e)
+    {
+        Broodwar << "EXCEPTION: " << e.what() << std::endl;
+    }
 }
 
 void ExampleAIModule::onEnd(bool isWinner)
@@ -116,7 +154,15 @@ void ExampleAIModule::onEnd(bool isWinner)
 void ExampleAIModule::onFrame()
 {
   // Called once every game frame
-
+    try
+    {
+        BWEM::utils::gridMapExample(theMap);
+        //BWEM::utils::drawMap(theMap);
+    }
+    catch (const std::exception& e)
+    {
+        Broodwar << "EXCEPTION: " << e.what() << std::endl;
+    }
   // Display the game frame rate as text in the upper left area of the screen
   Broodwar->drawTextScreen(0, 20,  "FPS: %d", Broodwar->getFPS() );
   Broodwar->drawTextScreen(0, 40, "Average FPS: %f", Broodwar->getAverageFPS() );
@@ -130,6 +176,20 @@ void ExampleAIModule::onFrame()
   Broodwar->drawTextScreen(500, 40, "Internal Supply: %d ", FakeResources(2));
   Broodwar->drawTextScreen(500, 50, "Drone Count: %d", droneCount);
 
+  
+  
+  for (int i = 0; i < droneCount; i++)
+  {
+      if (droneArry[i] != NULL && droneArry[i]->getType() == UnitTypes::Zerg_Drone && !droneArry[i]->isGatheringGas() && !droneArry[i]->isConstructing())
+      {
+          Broodwar->drawTextMap(droneArry[i]->getPosition(), "%c Coal Miners", Text::Purple);
+      } 
+      if (droneArry[i]->isConstructing() || droneArry[i]->isGatheringGas())
+      {
+          Broodwar->drawTextMap(droneArry[i]->getPosition(), "%c Holy shit", Text::Cyan);
+          
+      }
+  }
   
   //Broodwar->drawTextScreen(500, 70, ": %d",
 
@@ -187,12 +247,14 @@ void ExampleAIModule::onFrame()
 
 
     // Finally make the unit do some stuff!
+    
+
 
     if ((u->getType() == UnitTypes::Zerg_Zergling) && u->isIdle())
     {
-        if (u->getClosestUnit(Filter::IsEnemy) != NULL)
+        if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
         {
-            u->attack(u->getClosestUnit(Filter::IsEnemy)->getPosition());
+            u->attack(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition());
         }
     }
 
@@ -202,57 +264,30 @@ void ExampleAIModule::onFrame()
         {
             u->morph(UnitTypes::Zerg_Lurker);
         }
-
-        
-
     }
 
     if ((u->getType() == UnitTypes::Zerg_Lurker))
     {
-       // Position closeEnemy = (u->getClosestUnit(Filter::IsEnemy)->getPosition());
-       
-        
-        if (u->getClosestUnit(Filter::IsEnemy) != NULL )
+        // Position closeEnemy = (u->getClosestUnit(Filter::IsEnemy)->getPosition()); 
+        if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
         {
-            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy)->getPosition()) <= 180)
+            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition()) <= 180)
             {
-                
+
                 u->burrow();//idk
             }
-            else
+            else if (u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition())
             {
                 u->unburrow();
-                u->move(u->getClosestUnit(Filter::IsEnemy)->getPosition());
+                u->move(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition());
             }
         }
-
-        
-        
     }
- 
+
+    
 
 
-
-    if (u->getType() == UnitTypes::Zerg_Extractor)
-    {
-        
-       
-        if ((Refinerycount < 3 ))// && !u->isBeingGathered())//might not need the isBeingGathered part of it, downside is that stuck drones don't fix as fast
-       {
-           needsGasWorkers = true;
-           
-           
-       }else if (u->isBeingGathered()==true)
-       {
-           needsGasWorkers = false;
-          
-       }
-
-
-
-
-
-    }
+    
 
 
 
@@ -268,7 +303,6 @@ void ExampleAIModule::onFrame()
 
         if (u->isConstructing() || u->isGatheringGas())
         {
-            Broodwar->drawTextMap(pos, "%c Holy shit", Text::Cyan);
             continue;
         }
 
@@ -326,26 +360,14 @@ void ExampleAIModule::onFrame()
            
            
 
-          if (needsGasWorkers == true)
-          {
-              u->gather(currentRefinery);
-
-              
-              
-              
-              if (u->isGatheringGas())
-              {
-                  Refinerycount++;
-                  
-              }
-
-          }else
-          {
-              u->gather(u->getClosestUnit(IsMineralField));
+          
+          
+          
+             u->gather(u->getClosestUnit(IsMineralField));
 
               // If the call fails, then print the last error message
               //Broodwar << Broodwar->getLastError() << std::endl;
-          }
+          
 
        } // closure: if idle
 
@@ -367,7 +389,7 @@ void ExampleAIModule::onFrame()
             if ((FakeResources(0) >= 50) && droneCount < droneNeed)
             {
                     u->train(UnitTypes::Zerg_Drone);
-                    droneCount++;
+                    
                 
             }else if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == true && (hydraCount < 6 || FakeResources(0) >= 75 && FakeResources(1) >= 300 && Hive == 2))
             {
@@ -375,7 +397,7 @@ void ExampleAIModule::onFrame()
                u->train(UnitTypes::Zerg_Hydralisk);
                 
                
-            }else if (FakeResources(0) >= 50 && pool == 2 && Hive == 2)
+            }else if (FakeResources(0) >= 50 && pool == 2 && Hive == 2 && FakeResources(1) < 299)
             {
                 u->train(UnitTypes::Zerg_Zergling);
             }
@@ -419,6 +441,7 @@ void ExampleAIModule::onFrame()
         if (Hive == 2 && FakeResources(0) >= UpgradeTypes::Adrenal_Glands.mineralPrice() && FakeResources(1) >= UpgradeTypes::Adrenal_Glands.gasPrice())
         {
             u->upgrade(UpgradeTypes::Adrenal_Glands);
+            
         }
 
     }
@@ -434,11 +457,12 @@ void ExampleAIModule::onFrame()
 
 void ExampleAIModule::onSendText(std::string text)
 {
+    BWEM::utils::MapDrawer::ProcessCommand(text);
 
   // Send the text to the game if it is not being processed.
   Broodwar->sendText("%s", text.c_str());
 
-
+  
   // Make sure to use %s and pass the text as a parameter,
   // otherwise you may run into problems when you use the %(percent) character!
 
@@ -510,9 +534,21 @@ void ExampleAIModule::onUnitCreate(BWAPI::Unit unit)
 
 void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
 {
+
+    try
+    {
+        if (unit->getType().isMineralField())    theMap.OnMineralDestroyed(unit);
+        else if (unit->getType().isSpecialBuilding()) theMap.OnStaticBuildingDestroyed(unit);
+    }
+    catch (const std::exception& e)
+    {
+        Broodwar << "EXCEPTION: " << e.what() << std::endl;
+    }
+
+
     if (unit->getType() == UnitTypes::Zerg_Drone)
     {
-        droneCount = droneCount - 1;
+        //droneCount = droneCount - 1;
     }
 }
 
@@ -542,7 +578,7 @@ void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
             preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
             preSpent[1] = preSpent[1] - unit->getType().gasPrice();
             
-            droneCount = droneCount -1;
+            //droneCount = droneCount -1;
             
 
          
@@ -604,9 +640,22 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 
         }else if (unit->getType() == UnitTypes::Zerg_Extractor)
         {
-            currentRefinery = unit;
-            Refinerycount = 0;
-            droneNeed += 4;
+            //currentRefinery = unit;
+            
+            refineryArry[refineryCount].Extractor = unit;
+            refineryCount++;
+
+            for(int i = 0; i < 3; i++)
+            {
+                PullDrones()->gather(unit);
+                Broodwar->sendText("%s", PullDrones());
+            }
+           
+           
+           
+               
+            int a = 4;
+            droneNeed += a;
 
         }else if (unit->getType() == UnitTypes::Zerg_Hydralisk)
         {
@@ -614,9 +663,11 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
 
         }else if (unit->getType() == UnitTypes::Zerg_Drone)
         {
-           
 
+            droneArry[droneCount] = unit;
+            droneCount++;
         }
     }
     
 } 
+
