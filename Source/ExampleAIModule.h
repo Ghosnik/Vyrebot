@@ -37,34 +37,38 @@ public:
   virtual void onUnitComplete(BWAPI::Unit unit);
   // Everything below this line is safe to modify.
   virtual int FakeResources(int reReq);
-  virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee);
+  virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee, BWAPI::TilePosition buildPosition = {});
   Unit ExampleAIModule::PullDrones();
 
 
-
+  int cColony = 0;
+  int sunken = 0;
 
   int pool = 0;
+  int queensNest = 0;
+  int extractor = 0;
+  int den = 0;
+
+  int hatch = 0;
   int Lair = 0;
   int Hive = 0;
-  int queensNest = 0;
-  bool extractor = false;
-  bool den = false;
-  bool hatch = false;
-  bool attack = false;
 
-  
+  int timer = 0;
+  int randDrone = 0;
  
   int droneCount = 0;
-  int droneNeed = 18;//idk
+  int droneNeed = 22;//idk
   int hydraCount = 0;
   int preSpent[3] = {0,0,-8};
 
+  bool lurkerAspect = false;
+  bool transfer = false;
 
-
+  std::string insults[6] = { "0 Shit", "WaddUp", "dafuk?", "idi nahoi","We Dem Bois","ironman btw"};
   
   
   Unit droneArry[201] = {};
-  
+  Unit walkingWorker;
   
   int refineryCount = 0;
   Refinery refineryArry[30];

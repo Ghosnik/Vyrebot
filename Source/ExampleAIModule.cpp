@@ -1,31 +1,50 @@
 #include "ExampleAIModule.h"
 #include "BWEM 1.4.1\src\bwem.h"  
 #include <iostream>
-#include <fstream> 
+#include <sstream> 
+#include <time.h>
 
 using namespace BWAPI;
 using namespace Filter;
-//using namespace BWEM;
+using namespace BWEM;
 //using namespace BWEM::BWAPI_ext;
-//using namespace BWEM::utils;
+using namespace BWEM::utils;
 
 namespace { auto& theMap = BWEM::Map::Instance(); }
 
 
 
+const Base *space;
+/*PLANS
+* 
+* Lurker Contain at every choke and only attacks on supply counts
+* Getting upgrades and making them come out by turning other shit into elses or by some other means
+* Getting scorge out to actually be able to comebat air
+* Maybe replacing lings with hydras due to how they stack up vs all 3 races
+* turning some of the arrays into vectors without breaking everything
+* making more youtube vids on it
+* figuring out the drone transfer
+* making use of "pulldrones" to get some stuff out of "onframe"
+* making a building fail safe for when the don't make
+* 
+*/
+
 Unit ExampleAIModule::PullDrones()
 {
     for (int i = 0; i < droneCount; i++)
     {
+
         if (droneArry[i] != NULL && droneArry[i]->getType() == UnitTypes::Zerg_Drone && !droneArry[i]->isGatheringGas() && !droneArry[i]->isConstructing())
         {
            
             //Broodwar->sendText("%s fffff", droneArry[i]->getType().c_str());
             return droneArry[i];
         }
+       
 
     }
-
+    system("pause");
+    return NULL;
 }
 
 int ExampleAIModule::FakeResources(int reReq)
@@ -49,16 +68,23 @@ int ExampleAIModule::FakeResources(int reReq)
 
 
 
-void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee)
+void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee, TilePosition buildPosition)
 {
    
+    if (buildPosition.x == NULL)
+    {
+        buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
+
+    }
+
     
-        TilePosition buildPosition = Broodwar->getBuildLocation(bigbee, unit->getTilePosition());
+        
         unit->build(bigbee, buildPosition);
         //Broodwar->sendText("%s", bigbee.c_str());
         preSpent[0] += bigbee.mineralPrice();
         preSpent[1] += bigbee.gasPrice();
         Broodwar->sendText("Holy Fuck %s", unit->isConstructing() ? "True" : "False");
+       
         
     
     /*else if (unit->getType().isBuilding())
@@ -74,7 +100,7 @@ void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee
 
 void ExampleAIModule::onStart()
 {
-
+    //system("pause");
     try {
 
         // Hello World!
@@ -86,6 +112,9 @@ void ExampleAIModule::onStart()
 
         // Enable the UserInput flag, which allows us to control the bot and type messages.
         Broodwar->enableFlag(Flag::UserInput);
+
+
+
 
         Broodwar->setLocalSpeed(10);
 
@@ -131,7 +160,38 @@ void ExampleAIModule::onStart()
             BWEM::utils::printMap(theMap);      // will print the map into the file <StarCraftFolder>bwapi-data/map.bmp
             BWEM::utils::pathExample(theMap);   // add to the printed map a path between two starting locations
 
-            Broodwar << "gg" << std::endl;
+            BWEM::utils::MapDrawer::ProcessCommand("all");
+            Broodwar << "Done" << std::endl;
+
+
+            int closebase = 10000;
+
+            for (const Area& area : theMap.Areas())
+            {
+                for (const Base& base : area.Bases())
+                {
+                    if (base.Starting())
+                    {
+                        continue;
+                    }
+
+                    //WalkPosition origin(base.Location());
+                    //WalkPosition size(UnitType(UnitTypes::Terran_Command_Center).tileSize());	// same size for other races
+                    //auto dashMode = base.BlockingMinerals().empty() ? MapPrinter::not_dashed : MapPrinter::dashed;
+                    //MapPrinter::Get().Rectangle(origin, origin + size - 1, MapPrinter::Color::bases, MapPrinter::do_not_fill, dashMode);
+
+                    
+                    int dist = Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+
+                    if (closebase > dist)
+                    {
+                        closebase = dist;
+                        space = &base;
+                    }
+                }
+
+                
+            }
 
         }
         
@@ -157,7 +217,7 @@ void ExampleAIModule::onFrame()
     try
     {
         BWEM::utils::gridMapExample(theMap);
-        //BWEM::utils::drawMap(theMap);
+        BWEM::utils::drawMap(theMap);
     }
     catch (const std::exception& e)
     {
@@ -180,15 +240,22 @@ void ExampleAIModule::onFrame()
   
   for (int i = 0; i < droneCount; i++)
   {
-      if (droneArry[i] != NULL && droneArry[i]->getType() == UnitTypes::Zerg_Drone && !droneArry[i]->isGatheringGas() && !droneArry[i]->isConstructing())
-      {
-          Broodwar->drawTextMap(droneArry[i]->getPosition(), "%c Coal Miners", Text::Purple);
-      } 
       if (droneArry[i]->isConstructing() || droneArry[i]->isGatheringGas())
       {
           Broodwar->drawTextMap(droneArry[i]->getPosition(), "%c Holy shit", Text::Cyan);
-          
+
+      }else if (i == randDrone)
+      {
+          Broodwar->drawTextMap(droneArry[i]->getPosition(), "%c %s", Text::Orange, insults[i%6].c_str());
+      } 
+
+      if (timer <= Broodwar->getFrameCount() - 50)
+      {
+          timer = Broodwar->getFrameCount();
+          randDrone = rand() % droneCount;
       }
+
+     
   }
   
   //Broodwar->drawTextScreen(500, 70, ": %d",
@@ -204,7 +271,7 @@ void ExampleAIModule::onFrame()
 
   
   
- 
+  //Broodwar->sendText("%s", hatch == 0 ? "true":"false");
 
     
   // Iterate through all the units that we own
@@ -250,7 +317,7 @@ void ExampleAIModule::onFrame()
     
 
 
-    if ((u->getType() == UnitTypes::Zerg_Zergling) && u->isIdle())
+    if (u->getType() == UnitTypes::Zerg_Zergling)
     {
         if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
         {
@@ -258,15 +325,16 @@ void ExampleAIModule::onFrame()
         }
     }
 
-    if ((u->getType() == UnitTypes::Zerg_Hydralisk))
+    if (u->getType() == UnitTypes::Zerg_Hydralisk)
     {
         if (FakeResources(0) >= 50 && FakeResources(1) >= 100)
         {
             u->morph(UnitTypes::Zerg_Lurker);
+
         }
     }
 
-    if ((u->getType() == UnitTypes::Zerg_Lurker))
+    if (u->getType() == UnitTypes::Zerg_Lurker)
     {
         // Position closeEnemy = (u->getClosestUnit(Filter::IsEnemy)->getPosition()); 
         if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
@@ -275,8 +343,8 @@ void ExampleAIModule::onFrame()
             {
 
                 u->burrow();//idk
-            }
-            else if (u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition())
+
+            }else if (u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition())
             {
                 u->unburrow();
                 u->move(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition());
@@ -284,9 +352,16 @@ void ExampleAIModule::onFrame()
         }
     }
 
+    if ((u->getType() == UnitTypes::Zerg_Creep_Colony))
+    {
+        if (FakeResources(0) >= 50)
+        {
+            u->morph(UnitTypes::Zerg_Sunken_Colony);
+           // sunken++;
+        }
+
+    }
     
-
-
     
 
 
@@ -305,13 +380,23 @@ void ExampleAIModule::onFrame()
         {
             continue;
         }
+        if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
+        {
+            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition()) <= 125)
+            {
+                Position enemypos = u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition();
 
+                pos = { pos.x + (pos.x - enemypos.x),pos.y + (pos.y - enemypos.y) };
 
+                u->move(pos);
+            }
+        }
+        
 
-        if (!extractor && FakeResources(0) >= UnitTypes::Zerg_Extractor.mineralPrice() && pool == 1)//idk)
+        if (extractor == 0 && FakeResources(0) >= 50 && pool == 1 || extractor == 0 && FakeResources(0) >= 50 && pool == 2)//idk)
         {
             BuildingBuildings(u, UnitTypes::Zerg_Extractor);
-            extractor = true;
+            extractor = 1;
             Broodwar->sendText("Extractor %s", u->isConstructing() ? "True" : "False");
 
         }else if (pool == 0 && FakeResources(0) >= UnitTypes::Zerg_Spawning_Pool.mineralPrice())
@@ -323,24 +408,49 @@ void ExampleAIModule::onFrame()
         }else if (pool == 2 && !den && FakeResources(0) >= UnitTypes::Zerg_Hydralisk_Den.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Hydralisk_Den.gasPrice())
         {
             BuildingBuildings(u, UnitTypes::Zerg_Hydralisk_Den);
-            den = true;
+            den = 1;
             Broodwar->sendText("Hydra Den %s", u->isConstructing() ? "True" : "False");
 
-        }else if (!hatch && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
+        }else if (hatch == 0 && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice() || hatch == 1 && Hive == 1 && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
         {
-            BuildingBuildings(u, UnitTypes::Zerg_Hatchery);
-            hatch = true;
-            Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
+            if (hatch == 1 && Hive == 1 )
+            {
+                BuildingBuildings(u, UnitTypes::Zerg_Hatchery);
+                hatch = 2;
+                Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
+            }
+            else
+            {
+                Position pos(space->Location());
+                u->move(pos);
+                walkingWorker = u;
+                hatch = 1;
+                Broodwar->sendText("Exspanding %s", u->isMoving() ? "True" : "False");
+            }
 
         }else if (queensNest == 0 && Lair == 2 && FakeResources(0) >= UnitTypes::Zerg_Queens_Nest.mineralPrice() && FakeResources(1) >= UnitTypes::Zerg_Queens_Nest.gasPrice())
         {
             BuildingBuildings(u, UnitTypes::Zerg_Queens_Nest);
             queensNest = 1;
             Broodwar->sendText("Queen's Nest %s", u->isConstructing() ? "True" : "False");
+
+        }else if (cColony == 0 && extractor == 1 && FakeResources(0) >= UnitTypes::Zerg_Creep_Colony.mineralPrice())
+        {
+            BuildingBuildings(u, UnitTypes::Zerg_Creep_Colony);
+            cColony++;
+            Broodwar->sendText("Creep Colony %s", u->isConstructing() ? "True" : "False");
         }
       
-      
-
+       
+        
+       if (walkingWorker == u)
+       {
+           if (u->isIdle())
+           {
+               BuildingBuildings(u, UnitTypes::Zerg_Hatchery, space->Location());
+               Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
+           }
+       }
       
 
       // if our worker is idle
@@ -391,7 +501,7 @@ void ExampleAIModule::onFrame()
                     u->train(UnitTypes::Zerg_Drone);
                     
                 
-            }else if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == true && (hydraCount < 6 || FakeResources(0) >= 75 && FakeResources(1) >= 300 && Hive == 2))
+            }else if (FakeResources(0) >= 75 && FakeResources(1) >= 25 && den == 1 && (hydraCount < 6 || FakeResources(0) >= 125 && FakeResources(1) >= 125 && lurkerAspect == true))
             {
                 
                u->train(UnitTypes::Zerg_Hydralisk);
@@ -428,12 +538,13 @@ void ExampleAIModule::onFrame()
         if (u->isIdle() && Lair == 2 && FakeResources(0) >= TechTypes::Lurker_Aspect.mineralPrice() && FakeResources(1) >= TechTypes::Lurker_Aspect.gasPrice())
         {
             u->research(TechTypes::Lurker_Aspect);
+            lurkerAspect = true;
         }
 
     }else if (u->getType() == UnitTypes::Zerg_Spawning_Pool && u->isIdle())
     {
 
-        if (den == true && FakeResources(0) >= UpgradeTypes::Metabolic_Boost.mineralPrice() && FakeResources(1) >= UpgradeTypes::Metabolic_Boost.gasPrice())
+        if (den == 1 && FakeResources(0) >= UpgradeTypes::Metabolic_Boost.mineralPrice() && FakeResources(1) >= UpgradeTypes::Metabolic_Boost.gasPrice())
         {
             u->upgrade(UpgradeTypes::Metabolic_Boost);
 
@@ -466,6 +577,13 @@ void ExampleAIModule::onSendText(std::string text)
   // Make sure to use %s and pass the text as a parameter,
   // otherwise you may run into problems when you use the %(percent) character!
 
+  if (text[0]>= '0' && text[0] <= '9')
+  {
+      std::stringstream wantedSpeed(text);
+      int speedBoi;
+      wantedSpeed >> speedBoi;
+      Broodwar->setLocalSpeed(speedBoi);
+  }
 }
 
 void ExampleAIModule::onReceiveText(BWAPI::Player player, std::string text)
@@ -545,12 +663,68 @@ void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
         Broodwar << "EXCEPTION: " << e.what() << std::endl;
     }
 
-
-    if (unit->getType() == UnitTypes::Zerg_Drone)
+    if (unit->getPlayer() == Broodwar->self())
     {
-        //droneCount = droneCount - 1;
+        if (unit->getType() == UnitTypes::Zerg_Drone)
+        {
+            //droneCount = droneCount - 1;
+            droneNeed++;
+            //Broodwar->sendText("one of the boiz died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Sunken_Colony)
+        {
+            //cColony = 0;
+            //sunken = 0;
+            Broodwar->sendText("Sunken died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Lair)
+        {
+            hatch = 0;
+            Lair = 0;
+            Broodwar->sendText("Lairs died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Hive)
+        {
+            hatch = 0;
+            Lair = 0;
+            Hive = 0;
+            Broodwar->sendText("Hives died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Spawning_Pool)
+        {
+            pool = 0;
+            Broodwar->sendText("Pools died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Queens_Nest)
+        {
+            //queensNest = 0;
+            Broodwar->sendText("Queen's Nest died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Creep_Colony)
+        {
+            //cColony = cColony - 1;
+            Broodwar->sendText("Creep Colony died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Hatchery)
+        {
+            hatch = 0;
+            Broodwar->sendText("Hatchery died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Hydralisk_Den)
+        {
+            den = 0;
+            Broodwar->sendText("Hydra Den died");
+
+        }else if (unit->getType() == UnitTypes::Zerg_Extractor)
+        {
+            extractor = 0;
+            Broodwar->sendText("Extracor died");
+
+        }
     }
 }
+   
+
 
 void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
 {
@@ -568,19 +742,23 @@ void ExampleAIModule::onUnitMorph(BWAPI::Unit unit)
             if (unit->getType() == UnitTypes::Zerg_Hive)
             {
                 Hive = 1;
-                hatch = false;//idk
             }
             
             
 
-        }else if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor)
+        }else if (unit->getType().isBuilding() || unit->getType() == UnitTypes::Zerg_Extractor || unit->getType() == UnitTypes::Zerg_Sunken_Colony)
         {
             preSpent[0] = preSpent[0] - unit->getType().mineralPrice();
             preSpent[1] = preSpent[1] - unit->getType().gasPrice();
-            
+            //droneNeed++;
+
+            if (unit->getType() == UnitTypes::Zerg_Sunken_Colony)
+            {
+                preSpent[0] = preSpent[0] - -50;
+            }
             //droneCount = droneCount -1;
             
-
+            
          
 
         }
@@ -617,12 +795,32 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
         if (unit->getType() == UnitTypes::Zerg_Overlord)
         {
             preSpent[2] = preSpent[2] + 8;
+        }
+        else if (unit->getType() == UnitTypes::Zerg_Hatchery)
+        {
+            Broodwar->sendText("Hatchery done");
+
+            if (!NULL && !transfer && hatch == 1)
+            {
+                
+                for (int i = 0; i < 9; i++)
+                {
+                    PullDrones()->move(unit->getPosition());
+
+                    Broodwar->sendText("Transfer done %d", i);
+                    if (i == 9)
+                    {
+                        transfer = true;
+                    }
+                }
+            }
+
         }else if (unit->getType() == UnitTypes::Zerg_Lair)
         {
             Lair = 2;
             Broodwar->sendText("Lairs done");
-        }
-        else if (unit->getType() == UnitTypes::Zerg_Hive)
+
+        }else if (unit->getType() == UnitTypes::Zerg_Hive)
         {
             Hive = 2;
             Broodwar->sendText("Hives done");
@@ -638,7 +836,19 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
             queensNest = 2;
             Broodwar->sendText("Queen's Nest done");
 
-        }else if (unit->getType() == UnitTypes::Zerg_Extractor)
+        }else if (unit->getType() == UnitTypes::Zerg_Creep_Colony)
+        {
+            //cColony = 2;
+            Broodwar->sendText("Creep Colony done");
+           
+        }
+        else if (unit->getType() == UnitTypes::Zerg_Creep_Colony)
+        {
+            //sunken = 2;
+            Broodwar->sendText("Sunken Colony done");
+           
+        }
+        else if (unit->getType() == UnitTypes::Zerg_Extractor)
         {
             //currentRefinery = unit;
             
@@ -648,14 +858,12 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
             for(int i = 0; i < 3; i++)
             {
                 PullDrones()->gather(unit);
-                Broodwar->sendText("%s", PullDrones());
             }
            
            
            
                
-            int a = 4;
-            droneNeed += a;
+            
 
         }else if (unit->getType() == UnitTypes::Zerg_Hydralisk)
         {

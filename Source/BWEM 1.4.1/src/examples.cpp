@@ -468,8 +468,8 @@ void gridMapExample(const Map & theMap)
 
 	// 3) Use
 	TilePosition centerTile(theMap.Center());
-	for (Unit unit : Grid.GetUnits(centerTile-10, centerTile+10, Broodwar->self()))
-		Broodwar << "My " << unit->getType().getName() << " #" << unit->getID() << " is near the center of the map." << endl;
+	//for (Unit unit : Grid.GetUnits(centerTile-10, centerTile+10, Broodwar->self()))
+		//Broodwar << "My " << unit->getType().getName() << " #" << unit->getID() << " is near the center of the map." << endl;
 }
 
 
