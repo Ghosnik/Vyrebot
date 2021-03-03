@@ -37,7 +37,7 @@ public:
   virtual void onUnitComplete(BWAPI::Unit unit);
   // Everything below this line is safe to modify.
   virtual int FakeResources(int reReq);
-  virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee, BWAPI::TilePosition buildPosition = {});
+  virtual void BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee, int *stageint = 0, BWAPI::TilePosition buildPosition = {});
   Unit ExampleAIModule::PullDrones();
 
 
@@ -48,6 +48,7 @@ public:
   int queensNest = 0;
   int extractor = 0;
   int den = 0;
+  int spire = 0;
 
   int hatch = 0;
   int Lair = 0;
@@ -55,6 +56,8 @@ public:
 
   int timer = 0;
   int randDrone = 0;
+  
+  
  
   int droneCount = 0;
   int droneNeed = 22;//idk
@@ -64,7 +67,7 @@ public:
   bool lurkerAspect = false;
   bool transfer = false;
 
-  std::string insults[6] = { "0 Shit", "WaddUp", "dafuk?", "idi nahoi","We Dem Bois","ironman btw"};
+  std::string insults[6] = { "o Shit", "WaddUp", "dafuk?", "idi nahoi","We Dem Bois","ironman btw"};
   
   
   Unit droneArry[201] = {};
