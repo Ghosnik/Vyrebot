@@ -85,7 +85,8 @@ void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee
     
     if (unit->build(bigbee, buildPosition) && unit->canMove())
     {
-        
+       // untsque.push_back (bigbee);
+
         preSpent[0] += bigbee.mineralPrice();
         preSpent[1] += bigbee.gasPrice();
         Broodwar->sendText("Holy Fuck %s", unit->isConstructing() ? "True" : "False");
@@ -108,7 +109,7 @@ void ExampleAIModule::BuildingBuildings(BWAPI::Unit unit, BWAPI::UnitType bigbee
 
 void ExampleAIModule::onStart()
 {
-    //system("pause");
+    
     try {
 
         // Hello World!
@@ -243,7 +244,11 @@ void ExampleAIModule::onFrame()
   Broodwar->drawTextScreen(500, 30, "Internal Gas: %d ", FakeResources(1));
   Broodwar->drawTextScreen(500, 40, "Internal Supply: %d ", FakeResources(2));
   Broodwar->drawTextScreen(500, 50, "Drone Count: %d", droneCount);
-
+  /*if (untsque[0].size()> 0)
+  {
+      system("pause");
+      Broodwar->drawTextScreen(0, 70, "heylol %s", untsque[0].c_str());
+  }*/
   
   
   for (int i = 0; i < droneCount; i++)
