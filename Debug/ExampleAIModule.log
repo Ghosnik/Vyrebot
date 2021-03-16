@@ -1,0 +1,48 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v150\Platforms\Win32\PlatformToolsets\v141_xp\Toolset.targets(39,5): warning MSB8051: Support for targeting Windows XP is deprecated and will not be present in future releases of Visual Studio. Please see https://go.microsoft.com/fwlink/?linkid=2023588 for more information.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v150\Microsoft.CppBuild.targets(377,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v150\Microsoft.CppBuild.targets(391,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (ExampleAIModule - Copy.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  EasyBMP.cpp
+  area.cpp
+  base.cpp
+  bwapiExt.cpp
+  bwem.cpp
+  cp.cpp
+  examples.cpp
+  exampleWall.cpp
+  graph.cpp
+  gridMap.cpp
+  map.cpp
+  mapDrawer.cpp
+  mapImpl.cpp
+  mapPrinter.cpp
+  neutral.cpp
+  tiles.cpp
+  utils.cpp
+  winutils.cpp
+  Dll.cpp
+  ExampleAIModule.cpp
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(36): warning C4018: '<': signed/unsigned mismatch
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(245): warning C4244: 'initializing': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(246): warning C4244: 'initializing': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(250): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(251): warning C4244: '=': conversion from 'T' to 'float', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(312): warning C4018: '<': signed/unsigned mismatch
+C:\BWAPI\Vyrebot\Source\ExampleAIModule.cpp(966): warning C4552: '-': result of expression not used
+     Creating library Debug\Vyrebot.lib and object Debug\Vyrebot.exp
+  ExampleAIModule.vcxproj -> C:\BWAPI\Vyrebot\..\..\Users\nikol\Desktop\Starcraft_1161\bwapi-data\AI\Vyrebot.dll
