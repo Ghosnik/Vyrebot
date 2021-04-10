@@ -19,6 +19,10 @@ class Refinery
 public:
 	Unit Extractor;
 	Unit gasDrones[3] = {};
+	Refinery(Unit Extractor_) 
+	{
+		Extractor = Extractor_;
+	}
 };
 
 
@@ -103,5 +107,5 @@ public:
   Unit walkingWorker;
   
   int refineryCount = 0;
-  Refinery refineryArry[30];
+  std::vector<Refinery> refVec;
 };

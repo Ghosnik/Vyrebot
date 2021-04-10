@@ -36,6 +36,15 @@ Unit ExampleAIModule::PullDrones()
     for (int i = 0; i < droneVec.size(); i++)
     {
 
+        if (droneVec[i]->getType() != UnitTypes::Zerg_Drone)
+        {
+             droneVec.erase(droneVec.begin() + i);
+             i--;
+        }
+
+
+
+
         if (droneVec[i] != NULL && droneVec[i]->canMove() && droneVec[i]->getType() == UnitTypes::Zerg_Drone && !droneVec[i]->isGatheringGas() && !droneVec[i]->isConstructing())
         {
 
@@ -308,6 +317,8 @@ void ExampleAIModule::onFrame()
   Broodwar->drawTextScreen(500, 30, "Internal Gas: %d ", FakeResources(1));
   Broodwar->drawTextScreen(500, 40, "Internal Supply: %d ", FakeResources(2));
   Broodwar->drawTextScreen(500, 50, "Drone Count: %d", droneCount);
+
+  
   
   for (int i = 0; i < basesLoc.size(); i++)
   {
@@ -384,11 +395,6 @@ void ExampleAIModule::onFrame()
         continue;
       
      
-
-    if (!u->isCompleted() || (u->getType() == UnitTypes::Zerg_Egg))
-    {
-        //Broodwar->sendText("%s", u->getType().c_str());
-    }
 
 
 
@@ -499,7 +505,7 @@ void ExampleAIModule::onFrame()
 
     if (u->getType() == UnitTypes::Zerg_Hydralisk)
     {
-        if (FakeResources(0) >= 50 && FakeResources(1) >= 100)
+        if (FakeResources(0) >= 50 && FakeResources(1) >= 100 && u->canMorph())
         {
             u->morph(UnitTypes::Zerg_Lurker);
 
@@ -538,15 +544,24 @@ void ExampleAIModule::onFrame()
         }
         if (u->getClosestUnit(Filter::IsEnemy && !IsFlying) != NULL)
         {
-            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition()) <= 170)
+            if (u->getDistance(u->getClosestUnit(Filter::IsEnemy && !IsFlying && !IsWorker)->getPosition()) <= 170)
             {
                 Position enemypos = u->getClosestUnit(Filter::IsEnemy && !IsFlying)->getPosition();
                 pos = { pos.x + (pos.x - enemypos.x),pos.y + (pos.y - enemypos.y) };
 
                 u->move(pos);
             }
+           /* if (u->getDistance(u->getClosestUnit(Filter::IsEnemy && IsWorker)->getPosition()) <= 32)
+            {
+                u->attack(u->getClosestUnit(Filter::IsEnemy && IsWorker));
+
+                if (u->isStartingAttack() && !u->isUnderAttack())
+                {
+                    u->stop();
+                }
+            }*/
         }
-        
+       
 
         if (extractor == 0 && FakeResources(0) >= 50 && pool != 0)//idk)
         {
@@ -573,18 +588,19 @@ void ExampleAIModule::onFrame()
             towns.push_back(hydraDen);
             den = 1;
             
-
+           
         }else if (hatch == 0 && FakeResources(0) >= UnitTypes::Zerg_Hatchery.mineralPrice())
         {
             if (u->canMove())
             {
+                //Position pos(space->Location());
                 Position pos(basesLoc[hatchCount]);
                 if (u->hasPath(pos))
                 {
                     hatch = 1;
                     u->move(pos);
                     walkingWorker = u;
-                    //Broodwar->sendText("Exspanding %s", u->isMoving() ? "True" : "False");
+                    Broodwar->sendText("Exspanding %s", u->isMoving() ? "True" : "False");
                     preSpent[0] += UnitTypes::Zerg_Hatchery.mineralPrice();
 
                 } 
@@ -628,13 +644,13 @@ void ExampleAIModule::onFrame()
         {
 
                 BuildingBuildings(u, UnitTypes::Zerg_Hatchery, nullptr, basesLoc[hatchCount]);
-
+               
                 //Broodwar->sendText("Hatchery %s", u->isConstructing() ? "True" : "False");
                 
         }
-        if (walkingWorker != nullptr && walkingWorker->isMorphing())
+        if (walkingWorker != NULL && walkingWorker->isConstructing())
         {
-            walkingWorker = nullptr;
+           // walkingWorker = NULL;
             
             
         }
@@ -651,14 +667,7 @@ void ExampleAIModule::onFrame()
             {
               u->returnCargo();
             }
-            
-
-           
-           
-
-          
-          
-          
+  
              u->gather(u->getClosestUnit(IsMineralField));
 
               // If the call fails, then print the last error message
@@ -735,6 +744,7 @@ void ExampleAIModule::onFrame()
     {
         if (u->isIdle() && Lair == 2 && FakeResources(0) >= TechTypes::Lurker_Aspect.mineralPrice() && FakeResources(1) >= TechTypes::Lurker_Aspect.gasPrice())
         {
+            
             u->research(TechTypes::Lurker_Aspect);
             lurkerAspect = true;
         }
@@ -908,7 +918,7 @@ void ExampleAIModule::onUnitDestroy(BWAPI::Unit unit)
 
         }else if (unit->getType() == UnitTypes::Zerg_Overlord)
         {
-            preSpent[2] = preSpent[2] + 8;
+            //preSpent[2] = preSpent[2] + 8;
             //Broodwar->sendText("Overlord died");
 
         }else if (unit->getType() == UnitTypes::Zerg_Sunken_Colony)
@@ -1040,12 +1050,14 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
         {
             preSpent[2] = preSpent[2] + 8;
         }
+       
+
         else if (unit->getType() == UnitTypes::Zerg_Hatchery)
         {
             //Broodwar->sendText("Hatchery done");
             hatchCount++;
             extractor = 0;
-            if (!NULL && !transfer && hatch == 1)
+            if (!transfer && hatch == 1)
             {
                 
                 for (int i = 0; i <= 6; i++)
@@ -1107,20 +1119,19 @@ void ExampleAIModule::onUnitComplete(BWAPI::Unit unit)
         else if (unit->getType() == UnitTypes::Zerg_Extractor)
         {
             //currentRefinery = unit;
-            
-            refineryArry[refineryCount].Extractor = unit;
-            refineryCount++;
+            Refinery bulliedRef(unit);
 
             for(int i = 0; i < 3; i++)
             {
                 PullDrones()->gather(unit);
             }
-
+            refVec.push_back(bulliedRef);
         }
         else if (unit->getType() == UnitTypes::Zerg_Drone)
         {
             droneVec.push_back (unit);
             droneCount++;
+            
             
         }
     }
